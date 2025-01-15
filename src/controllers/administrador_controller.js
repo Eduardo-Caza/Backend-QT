@@ -190,7 +190,7 @@ const crearModerador = async (req, res) => {
 
 // * Rutas relacionadas con Tiendas y Productos
 const listarTiendas = async (req, res) => {
-  const tiendas = await Tienda.find({ Verificado: true }).where('Tienda').equals(req.TiendaBDD).select("-salida -createdAt -updatedAt -__v").populate('Nombre_tienda Direccion');
+  const tiendas = await Tienda.find({ Verificado: true }).where('Tienda').equals(req.TiendaBDD).select("-salida -createdAt -updatedAt -__v").populate('Nombre Direccion');
   res.status(200).json(tiendas);
 };
 
