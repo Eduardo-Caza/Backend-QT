@@ -1,7 +1,7 @@
 import Usuario from "../models/usuarios.js"
 import Tienda from "../models/tienda.js"
 import Producto from "../models/producto.js"
-import { sendMailToAdmin,sendMailToUser2, sendMailToRecoveryPassword } from "../config/nodemailer.js"
+import { sendMailToAdmin,sendMailToUser2, sendMailToRecoveryPassword, sendMailToUserUpdateEmail } from "../config/nodemailer.js"
 import generarJWT from "../helpers/crearJWT.js"
 import mongoose from "mongoose";
 import { v2 as cloudinary } from 'cloudinary';
@@ -90,6 +90,22 @@ const registro = async (req, res) => {
   }
 };
 
+const verificarEmail = async (req, res) => {
+  const { email } = req.params;
+
+  try {
+    const usuario = await Usuario.findOne({ email });
+    if (usuario) {
+      return res.status(200).json({ disponible: false });
+    }
+    res.status(200).json({ disponible: true });
+  } catch (error) {
+    console.error("Error verificando el email:", error);
+    res.status(500).json({ msg: "Error interno del servidor" });
+  }
+};
+
+
 
 const confirmEmail = async (req,res)=>{
     //: ACTIVIDAD 1
@@ -103,6 +119,21 @@ const confirmEmail = async (req,res)=>{
 
     res.status(200).json({msg:"Felicidades su cuenta ha sido confirmada, puede iniciar sesion"}) 
 } // * BIEN
+const updateEmail = async (req,res)=>{
+  //: ACTIVIDAD 1
+  if(!(req.params.token)) return res.status(400).json({msg:"Lo sentimos, no se puede validar la cuenta"})
+
+  const propietarioBDD = await Usuario.findOne({token:req.params.token})
+  if(!propietarioBDD?.token) return res.status(404).json({msg:"Algo ha ocurrido, parece que la cuenta ya ha sido confirmada"})
+  const tienda = await Tienda.findOne({ id_propietario : propietarioBDD._id });
+
+  propietarioBDD.propietario=true
+  tienda.Verificado = true
+  await propietarioBDD.save()
+  await tienda.save()
+
+  res.status(200).json({msg:"Felicidades su cuenta ha sido actualizada, puede iniciar sesion"}) 
+}
 const actualizarPerfil = async (req, res) => {
   const { id } = req.params;
 
@@ -120,7 +151,7 @@ const actualizarPerfil = async (req, res) => {
   }
 
   const propietarioBDD = await Usuario.findById(id);
-  if (!propietarioBDD) return res.status(404).json({ msg: `Lo sentimos, el propietario ${id} no existe! `});
+  if (!propietarioBDD) return res.status(404).json({ msg: `Lo sentimos, el propietario ${id} no existe!` });
 
   // Verificar si el email ha cambiado
   if (propietarioBDD.email !== req.body.email) {
@@ -131,13 +162,11 @@ const actualizarPerfil = async (req, res) => {
       return res.status(404).json({ msg: "Lo sentimos, el perfil ya se encuentra registrado" });
     }
 
-    // Enviar el correo de verificación si el email ha cambiado
     await sendMailToUserUpdateEmail(req.body.email, token);
     TiendaBDD.Verificado = false;
     propietarioBDD.propietario = false;
   }
 
-  // Actualizar los campos del usuario y la tienda
   propietarioBDD.password = await propietarioBDD.encrypPassword(req.body.password);
   propietarioBDD.nombre = req.body.nombre || propietarioBDD?.nombre;
   propietarioBDD.apellido = req.body.apellido || propietarioBDD?.apellido;
@@ -182,8 +211,8 @@ const actualizarPerfil = async (req, res) => {
   await propietarioBDD.save();
   await TiendaBDD.save();
 
-  return res.status(200).json({ msg: "Perfil actualizado correctamente, si actualizó su correo debe volver a verificar su cuenta con el correo enviado"});
-} 
+  return res.status(200).json({ msg: "Perfil actualizado correctamente, si actualizó su correo debe volver a verificar su cuenta con el correo enviado" });
+}
 const actualizarPassword = async (req,res)=>{
     const propietarioBDD = await Usuario.findById(req.propietarioBDD._id)
     if(!propietarioBDD) return res.status(404).json({msg:`Lo sentimos, no existe el propietario ${id}`})
@@ -197,7 +226,7 @@ const recuperarPassword = async (req,res)=>{
     const {email} = req.body
     if (Object.values(req.body).includes("")) return res.status(404).json({msg:"Lo sentimos, debes llenar todos los campos"})
     const propietarioBDD = await Usuario.findOne({email})
-    if(!propietarioBDD) return res.status(404).json({msg:"Lo sentimos, el propietario no se encuentra registrado"})
+    if(!propietarioBDD) return res.status(404).json({msg:"Lo sentimos, el email no se encuentra registrado"})
     const token = propietarioBDD.crearToken()
     propietarioBDD.token=token
     await sendMailToRecoveryPassword(email,token)
@@ -205,7 +234,6 @@ const recuperarPassword = async (req,res)=>{
     res.status(200).json({msg:"Revisa tu correo electrónico para recuperar tu contraseña"})
 }// * BIEN
 const comprobarTokenPasword = async (req,res)=>{
- 
     if(!(req.params.token)) return res.status(404).json({msg:"Lo sentimos, no se puede validar la cuenta"})
     const propietarioBDD = await Usuario.findOne({token:req.params.token})
     if(propietarioBDD?.token !== req.params.token) return res.status(404).json({msg:"Lo sentimos, no se puede validar la cuenta"})
@@ -221,7 +249,7 @@ const nuevoPassword = async (req,res)=>{
         propietarioBDD.token = null
     propietarioBDD.password = await propietarioBDD.encrypPassword(password)
     await propietarioBDD.save()
-    res.status(200).json({msg:"Felicitaciones, ya puedes iniciar sesión con tu nueva contrase;a"}) 
+    res.status(200).json({msg:"Felicitaciones, ya puedes iniciar sesión con tu nueva contraseña"}) 
 }// * BIEN
 const actualizarEmail =async (req,res)=>{
     const {email}= req.body
@@ -278,14 +306,17 @@ const perfil = async (req, res) => {
       email: VerificarUsuario.email,
       numero: VerificarUsuario.Numero,
       imagenUrl: VerificarUsuario.ImagenUrl,
+      alerta_cantidad : VerificarUsuario.alerta_cantidad,
+      password: VerificarUsuario.password
     },
     tienda: {
       nombre: VerificarTienda.Nombre,
       direccion: VerificarTienda.Direccion,
       id_propietario: VerificarTienda.id_propietario,
-    },
-  });
+    },
+  });
 };
+
 
 // ! ENDPOINTS TIENDA
 const confirmarTienda = async (req,res)=>{
@@ -303,7 +334,7 @@ const confirmarTienda = async (req,res)=>{
     if(!tienda)return res.status(404).json({ msg: "Tienda no encontrada" });
    
     tienda.Verificado = true;
-    // propietario.token = null; Para evitar confucion sobre verificacion con tienda
+    propietario.token = null;
     propietario.propietario = true;
     
     await tienda.save();
@@ -362,7 +393,6 @@ const solicitarTienda = async (req, res) => {
     }
 };
 
-
 const obtenerTiendaConProductos = async (req, res) => {
     const { id } = req.params;
   
@@ -391,7 +421,7 @@ const obtenerTiendaConProductos = async (req, res) => {
   };
 
 // * BIEN
-const listarTiendas = async (req,res)=>{ 
+const listarTiendas = async (req,res)=>{
     const tiendas = await Tienda.find({Verificado:true}).where('Tienda').equals(req.TiendaBDD).select("-salida -createdAt -updatedAt -__v").populate('Nombre_tienda Direccion id_propietario _id')
     res.status(200).json(tiendas)
 }// * BIEN
@@ -439,35 +469,22 @@ const obtenerTiendaDelpropietario = async (req, res) => {
       res.status(500).json({ msg: 'Error al obtener la tienda', error });
     }
   };
-  const updateEmail = async (req,res)=>{
-    //: ACTIVIDAD 1
-    if(!(req.params.token)) return res.status(400).json({msg:"Lo sentimos, no se puede validar la cuenta"})
-  
-    const propietarioBDD = await Usuario.findOne({token:req.params.token})
-    if(!propietarioBDD?.token) return res.status(404).json({msg:"Algo ha ocurrido, parece que la cuenta ya ha sido confirmada"})
-    const tienda = await Tienda.findOne({ id_propietario : propietarioBDD._id });
-  
-    propietarioBDD.propietario=true
-    tienda.Verificado = true
-    await propietarioBDD.save()
-    await tienda.save()
-  
-    res.status(200).json({msg:"Felicidades su cuenta ha sido actualizada, puede iniciar sesion"}) 
-  }
+
 
 export {
     // ! Rutas de propietario
     login,
     perfil,
     registro,
+    verificarEmail,
+    updateEmail,
     confirmEmail,
     actualizarPerfil,
     actualizarEmail,
     actualizarPassword,
-	recuperarPassword,
+	  recuperarPassword,
     comprobarTokenPasword,
-	nuevoPassword,
-  updateEmail,
+	  nuevoPassword,
     // ! Rutas de tienda
     solicitarTienda,
     confirmarTienda,
