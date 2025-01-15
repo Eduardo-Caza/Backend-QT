@@ -572,7 +572,7 @@ const obtenerTiendaPorId = async (req, res) => {
 
   try {
     // Buscar la tienda en la base de datos usando el ID proporcionado
-    const tienda = await Tienda.findById(id).populate('id_usuario', 'nombre apellido'); // Populate para obtener datos del usuario (si es necesario)
+    const tienda = await Tienda.findById(id); 
     
     // Verificar si la tienda existe
     if (!tienda) {
@@ -586,6 +586,7 @@ const obtenerTiendaPorId = async (req, res) => {
     res.status(500).json({ message: 'Error al obtener los datos de la tienda' });
   }
 };
+
 
 // Función para obtener los datos de un moderador por su ID o email
 const obtenerModerador = async (req, res) => {
