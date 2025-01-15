@@ -17,12 +17,6 @@ const moderadorSchema = new Schema({
       type: String,
       required: [true, "El nombre es obligatorio"]
     },
-    role: { // Cambié permisos por role
-      type: String,
-      enum: ['administrador', 'moderador'],
-      required: true, // Asegura que siempre haya un role asignado
-      default: 'moderador', // Por defecto asignamos moderador si no se especifica
-    },
     estado: {
       type: Boolean,
       default: true, // Estado de activación del moderador

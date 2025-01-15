@@ -154,14 +154,14 @@ const actualizarEmail = async (req, res) => {
 const crearModerador = async (req, res) => {
   try {
     // Verificar que todos los campos estén completos
-    const requiredFields = ["email", "password", "nombre", "role", "pais", "telefono", "direccion", "usuario"];
+    const requiredFields = ["email", "password", "nombre", "pais", "telefono", "direccion", "usuario"];
     for (const field of requiredFields) {
       if (!req.body[field]) {
         return res.status(400).json({ msg: `El campo ${field} es obligatorio` });
       }
     }
 
-    const { email, password, nombre, role, pais, telefono, direccion, usuario } = req.body;
+    const { email, password, nombre, pais, telefono, direccion, usuario } = req.body;
 
     // Verificar si ya existe un moderador con ese correo
     const moderadorExistente = await Moderador.findOne({ email });
@@ -170,7 +170,7 @@ const crearModerador = async (req, res) => {
     }
 
     // Crear el nuevo moderador
-    const nuevoModerador = new Moderador({ email, password, nombre, role, pais, telefono, direccion, usuario });
+    const nuevoModerador = new Moderador({ email, password, nombre, pais, telefono, direccion, usuario });
 
     // Asegurarse de que la contraseña está definida antes de encriptarla
     nuevoModerador.password = await nuevoModerador.encrypPassword(password);
