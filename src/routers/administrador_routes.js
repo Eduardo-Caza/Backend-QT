@@ -48,7 +48,7 @@ router.post('/nuevo-password/:token', nuevoPassword); //ok
 router.get('/administrador/listartiendas', listarTiendas);
 router.get('/administrador/producto/listarproductos/:id', listarproductosporID);
 router.get('/administrador/productos/categoria/:Categoria', listarproductosporCategoria);
-router.get('/administrador/tienda/productos/:id_tienda', listarproductosIDtienda);
+router.get('/administrador/tienda/productos/:id', listarproductosIDtienda);
 
 // Rutas para eliminar tiendas y productos
 router.put('/administrador/tienda/:id_tienda/desactivar', desactivarTienda); //desactivar tienda
