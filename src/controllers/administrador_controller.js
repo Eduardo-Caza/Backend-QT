@@ -205,8 +205,7 @@ const listarproductosIDtienda = async (req, res) => {
 
     const productos = await Producto.find({ id_tienda })
       .select("-salida -createdAt -updatedAt -__v")
-      .populate('id_tienda', 'Nombre_tienda')
-      .populate('Nombre_producto Categoria');
+      .populate('id_tienda', 'Nombre_tienda'); // Sólo hacemos populate en id_tienda porque es una referencia válida
 
     res.status(200).json(productos);
   } catch (error) {
@@ -214,7 +213,6 @@ const listarproductosIDtienda = async (req, res) => {
     res.status(500).json({ msg: "Hubo un error en el servidor", error: error.message });
   }
 };
-
 
 const listarproductosporID = async (req, res) => {
   const { id } = req.params;
@@ -333,7 +331,7 @@ const eliminarProducto = async (req, res) => {
 const listarUsuarios = async (req, res) => {
   try {
     // Recuperar todos los usuarios
-    const usuarios = await usuario.find()
+    const usuarios = await Usuario.find()
       .select("-password -token -createdAt -updatedAt -__v"); // Excluir campos sensibles
 
     res.status(200).json(usuarios);
