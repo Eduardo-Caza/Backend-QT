@@ -613,6 +613,27 @@ const obtenerModerador = async (req, res) => {
   }
 };
 
+const obtenerUsuarioPorId = async (req, res) => {
+  const { id } = req.params; // Obtener el ID del usuario desde los parámetros de la URL
+  
+  try {
+    // Buscar el usuario en la base de datos por el ID
+    const usuario = await Usuario.findById(id); 
+    
+    if (!usuario) {
+      // Si no se encuentra el usuario, devolver un error 404
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    // Si se encuentra el usuario, devolverlo como respuesta
+    res.status(200).json(usuario);
+  } catch (error) {
+    // Si hay un error con la base de datos, manejarlo
+    console.error(error);
+    res.status(500).json({ message: 'Error al obtener el usuario' });
+  }
+};
+
 export {
   login,
   registro,
@@ -639,6 +660,7 @@ export {
   listarEstadisticasMod,
   obtenerUltimos10Productos,
   obtenerTiendaPorId,
-  obtenerModerador
+  obtenerModerador,
+  obtenerUsuarioPorId
 };
 
