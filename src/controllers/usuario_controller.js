@@ -138,27 +138,30 @@ const actualizarPerfil = async (req, res) => {
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
-    return res.status(404).json({ msg: 'Ocurrio un error inesperado, intente más tarde' });
+    return res.status(404).json({ msg: 'Ocurrió un error inesperado, intente más tarde' });
   }
 
   // Buscar la tienda y el propietario
   const TiendaBDD = await Tienda.findOne({ id_usuario: id });
   if (!TiendaBDD) return res.status(404).json({ msg: "Lo sentimos, la tienda no se encuentra registrada" });
 
-
   const propietarioBDD = await Usuario.findById(id);
   if (!propietarioBDD) return res.status(404).json({ msg: `Lo sentimos, el propietario ${id} no existe!` });
 
+  // Si se proporciona una nueva contraseña, encriptarla y actualizarla
+  if (req.body.password && req.body.password.trim() !== "") {
+    propietarioBDD.password = await propietarioBDD.encrypPassword(req.body.password);
+  }
 
-  propietarioBDD.password = await propietarioBDD.encrypPassword(req.body.password);
-  propietarioBDD.nombre = req.body.nombre || propietarioBDD?.nombre;
-  propietarioBDD.apellido = req.body.apellido || propietarioBDD?.apellido;
-  propietarioBDD.Numero = req.body.Numero || propietarioBDD?.Numero;
-  propietarioBDD.email = req.body.email || propietarioBDD?.email;
-  propietarioBDD.alerta_cantidad = req.body.alerta_cantidad || propietarioBDD?.alerta_cantidad;
+  // Actualizar otros campos sin afectar la contraseña si no se envió
+  propietarioBDD.nombre = req.body.nombre || propietarioBDD.nombre;
+  propietarioBDD.apellido = req.body.apellido || propietarioBDD.apellido;
+  propietarioBDD.Numero = req.body.Numero || propietarioBDD.Numero;
+  propietarioBDD.email = req.body.email || propietarioBDD.email;
+  propietarioBDD.alerta_cantidad = req.body.alerta_cantidad || propietarioBDD.alerta_cantidad;
 
-  TiendaBDD.Direccion = req.body.Direccion || TiendaBDD?.direccion;
-  TiendaBDD.Nombre = req.body.Nombre || TiendaBDD?.Nombre;
+  TiendaBDD.Direccion = req.body.Direccion || TiendaBDD.Direccion;
+  TiendaBDD.Nombre = req.body.Nombre || TiendaBDD.Nombre;
 
   // Si se envió una nueva imagen
   if (req.files && req.files.imagen) {
@@ -176,14 +179,14 @@ const actualizarPerfil = async (req, res) => {
     const file = req.files.imagen;
     try {
       const cloudinaryResponse = await cloudinary.uploader.upload(file.tempFilePath, {
-        folder: "usuarios",  // Puedes cambiar la carpeta si es necesario
+        folder: "usuarios",  
         use_filename: true,
         unique_filename: true,
       });
 
       // Guardar la nueva URL y el ID de la imagen en la base de datos
-      propietarioBDD.ImagenUrl = cloudinaryResponse.secure_url;  // URL de la imagen
-      propietarioBDD.imagenPublicId = cloudinaryResponse.public_id;  // ID de la imagen
+      propietarioBDD.ImagenUrl = cloudinaryResponse.secure_url;
+      propietarioBDD.imagenPublicId = cloudinaryResponse.public_id;
     } catch (error) {
       console.error("Error al subir la imagen a Cloudinary", error);
       return res.status(500).json({ msg: "Error al subir la imagen a Cloudinary. Intente más tarde." });
@@ -195,7 +198,8 @@ const actualizarPerfil = async (req, res) => {
   await TiendaBDD.save();
 
   return res.status(200).json({ msg: "Perfil actualizado correctamente" });
-}
+};
+
 const actualizarPassword = async (req,res)=>{
     const propietarioBDD = await Usuario.findById(req.propietarioBDD._id)
     if(!propietarioBDD) return res.status(404).json({msg:`Lo sentimos, no existe el propietario ${id}`})
