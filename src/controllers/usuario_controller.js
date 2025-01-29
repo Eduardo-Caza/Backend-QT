@@ -145,27 +145,10 @@ const actualizarPerfil = async (req, res) => {
   const TiendaBDD = await Tienda.findOne({ id_usuario: id });
   if (!TiendaBDD) return res.status(404).json({ msg: "Lo sentimos, la tienda no se encuentra registrada" });
 
-  const TiendaVerificada = TiendaBDD.Verificado;
-  if (!TiendaVerificada) {
-    return res.status(404).json({ msg: "Aún no se verifica la información de su tienda, en estos días se validará su tienda" });
-  }
 
   const propietarioBDD = await Usuario.findById(id);
   if (!propietarioBDD) return res.status(404).json({ msg: `Lo sentimos, el propietario ${id} no existe!` });
 
-  // Verificar si el email ha cambiado
-  if (propietarioBDD.email !== req.body.email) {
-    const token = propietarioBDD.token;
-    const propietarioBDDMail = await Usuario.findOne({ email: req.body.email });
-
-    if (propietarioBDDMail) {
-      return res.status(404).json({ msg: "Lo sentimos, el perfil ya se encuentra registrado" });
-    }
-
-    await sendMailToUserUpdateEmail(req.body.email, token);
-    TiendaBDD.Verificado = false;
-    propietarioBDD.propietario = false;
-  }
 
   propietarioBDD.password = await propietarioBDD.encrypPassword(req.body.password);
   propietarioBDD.nombre = req.body.nombre || propietarioBDD?.nombre;
@@ -211,7 +194,7 @@ const actualizarPerfil = async (req, res) => {
   await propietarioBDD.save();
   await TiendaBDD.save();
 
-  return res.status(200).json({ msg: "Perfil actualizado correctamente, si actualizó su correo debe volver a verificar su cuenta con el correo enviado" });
+  return res.status(200).json({ msg: "Perfil actualizado correctamente" });
 }
 const actualizarPassword = async (req,res)=>{
     const propietarioBDD = await Usuario.findById(req.propietarioBDD._id)
