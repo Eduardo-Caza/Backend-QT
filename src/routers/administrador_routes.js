@@ -16,7 +16,7 @@ import {
   eliminarProducto,         // Nueva función para eliminar productos
   crearModerador,
   listarUsuarios,            // Nueva función para crear moderadores con permisos específicos
-  //eliminarUsuario,
+  eliminarUsuario,
   listarModeradores,
   eliminarModerador,
   //crearUsuario,
@@ -61,7 +61,7 @@ router.get("/administrador/moderadores", listarModeradores);
 router.delete("/administrador/moderadores/:id", eliminarModerador);
 
 router.get("/administrador/listausuarios", listarUsuarios);
-// ! router.delete('/administrador/usuario/:id_usuario', eliminarUsuario);
+router.put('/administrador/usuario/:id_usuario', eliminarUsuario);
 
 // ! router.post("/administrador/crearusuarios", crearUsuario);
 

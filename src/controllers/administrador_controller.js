@@ -341,26 +341,34 @@ const listarUsuarios = async (req, res) => {
   }
 };
 
-/*const eliminarUsuario = async (req, res) => {
+const eliminarUsuario = async (req, res) => {
   try {
-      const { id_usuario } = req.params;
-      if (!id_usuario) {
-          return res.status(400).json({ msg: 'El ID del usuario es requerido' });
-      }
+    const { id_usuario } = req.params;
+    
+    if (!id_usuario) {
+      return res.status(400).json({ msg: 'El ID del usuario es requerido' });
+    }
 
-      const usuarioExistente = await usuario.findById(id_usuario);
-      if (!usuarioExistente) {
-          return res.status(404).json({ msg: 'Usuario no encontrado' });
-      }
+    // Buscar al usuario por su ID
+    const usuarioExistente = await usuario.findById(id_usuario);
+    if (!usuarioExistente) {
+      return res.status(404).json({ msg: 'Usuario no encontrado' });
+    }
 
-      await usuarioExistente.deleteOne();
-      res.status(200).json({ msg: 'Usuario eliminado correctamente' });
+    // Cambiar el estado de confirmEmail a false (suspendido)
+    usuarioExistente.confirmEmail = false;
+
+    // Guardar los cambios
+    await usuarioExistente.save();
+
+    res.status(200).json({ msg: 'Usuario suspendido correctamente' });
   } catch (error) {
-      console.error(error);
-      res.status(500).json({ msg: 'Hubo un error al eliminar el usuario' });
+    console.error(error);
+    res.status(500).json({ msg: 'Hubo un error al suspender el usuario' });
   }
 };
-*/
+
+
 const listarModeradores = async (req, res) => {
   try {
     const moderadores = await Moderador.find()
@@ -651,7 +659,7 @@ export {
   confirmEmail,
   desactivarTienda,  // Agregado
   eliminarProducto, // Se mantiene la función de eliminar producto
-  //eliminarUsuario,
+  eliminarUsuario,
   listarModeradores,
   eliminarModerador,
   //crearUsuario,
