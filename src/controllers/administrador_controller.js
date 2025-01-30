@@ -350,7 +350,7 @@ const eliminarUsuario = async (req, res) => {
     }
 
     // Buscar al usuario por su ID
-    const usuarioExistente = await usuario.findById(id_usuario);
+    const usuarioExistente = await Usuario.findById(id_usuario);
     if (!usuarioExistente) {
       return res.status(404).json({ msg: 'Usuario no encontrado' });
     }
